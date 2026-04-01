@@ -152,7 +152,7 @@ def _decode_payload(part: email.message.Message) -> Optional[str]:
     charset = part.get_content_charset() or "utf-8"
     try:
         raw = part.get_payload(decode=True)
-        if not raw:
+        if not isinstance(raw, bytes):
             return None
         return raw.decode(charset, errors="replace")
     except Exception:
@@ -246,11 +246,9 @@ def parse(msg: email.message.Message) -> ParsedMessage:
 
         elif _is_attachment_part(part):
             raw_data = part.get_payload(decode=True)
-            if raw_data is None:
+            if not isinstance(raw_data, bytes):
                 continue
-            filename = part.get_filename() or part.get_param("name")
-            if filename:
-                filename = _decode_header(filename)
+            filename = _decode_header(part.get_filename())
             content_id_raw = part.get("Content-ID")
             content_id = _clean_message_id(content_id_raw)
             attachments.append(

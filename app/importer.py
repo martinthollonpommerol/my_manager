@@ -16,7 +16,7 @@ import logging
 import mailbox
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import psycopg
 
@@ -38,7 +38,7 @@ class ImportResult:
 
 
 def import_mbox(
-    conn: psycopg.Connection,
+    conn: psycopg.Connection[Any],
     mbox_path: Path,
     label: str,
     batch_size: int = 200,
@@ -80,7 +80,7 @@ def import_mbox(
 # ---------------------------------------------------------------------------
 
 
-def _create_import_record(conn: psycopg.Connection, label: str, source_path: str) -> int:
+def _create_import_record(conn: psycopg.Connection[Any], label: str, source_path: str) -> int:
     row = conn.execute(
         """
         INSERT INTO mailapp.imports (label, source_path, status)
@@ -94,7 +94,7 @@ def _create_import_record(conn: psycopg.Connection, label: str, source_path: str
 
 
 def _process_messages(
-    conn: psycopg.Connection,
+    conn: psycopg.Connection[Any],
     mbox_path: Path,
     import_id: int,
     batch_size: int,
@@ -178,7 +178,7 @@ def _process_messages(
 
 
 def _insert_message(
-    conn: psycopg.Connection,
+    conn: psycopg.Connection[Any],
     import_id: int,
     parsed: ParsedMessage,
 ) -> Optional[int]:
@@ -224,7 +224,7 @@ def _insert_message(
     return row[0] if row else None
 
 
-def _flush_recipients(conn: psycopg.Connection, rows: list[tuple]) -> None:
+def _flush_recipients(conn: psycopg.Connection[Any], rows: list[tuple]) -> None:
     if not rows:
         return
     conn.executemany(
@@ -237,7 +237,7 @@ def _flush_recipients(conn: psycopg.Connection, rows: list[tuple]) -> None:
     )
 
 
-def _flush_attachments(conn: psycopg.Connection, rows: list[tuple]) -> None:
+def _flush_attachments(conn: psycopg.Connection[Any], rows: list[tuple]) -> None:
     if not rows:
         return
     conn.executemany(
@@ -250,7 +250,7 @@ def _flush_attachments(conn: psycopg.Connection, rows: list[tuple]) -> None:
     )
 
 
-def _finalise_import(conn: psycopg.Connection, import_id: int, message_count: int) -> None:
+def _finalise_import(conn: psycopg.Connection[Any], import_id: int, message_count: int) -> None:
     conn.execute(
         """
         UPDATE mailapp.imports
@@ -261,7 +261,7 @@ def _finalise_import(conn: psycopg.Connection, import_id: int, message_count: in
     )
 
 
-def _resolve_threads(conn: psycopg.Connection) -> None:
+def _resolve_threads(conn: psycopg.Connection[Any]) -> None:
     logger.info("Running mailapp.resolve_threads()…")
     conn.execute("SELECT mailapp.resolve_threads()")
     logger.info("Thread resolution complete.")
