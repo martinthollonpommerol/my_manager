@@ -227,27 +227,29 @@ def _insert_message(
 def _flush_recipients(conn: psycopg.Connection[Any], rows: list[tuple]) -> None:
     if not rows:
         return
-    conn.executemany(
-        """
-        INSERT INTO mailapp.message_recipients
-            (message_id, recipient_type, address, display_name)
-        VALUES (%s, %s, %s, %s)
-        """,
-        rows,
-    )
+    with conn.cursor() as cur:
+        cur.executemany(
+            """
+            INSERT INTO mailapp.message_recipients
+                (message_id, recipient_type, address, display_name)
+            VALUES (%s, %s, %s, %s)
+            """,
+            rows,
+        )
 
 
 def _flush_attachments(conn: psycopg.Connection[Any], rows: list[tuple]) -> None:
     if not rows:
         return
-    conn.executemany(
-        """
-        INSERT INTO mailapp.attachments
-            (message_id, content_type, filename, content_id, size_bytes, data)
-        VALUES (%s, %s, %s, %s, %s, %s)
-        """,
-        rows,
-    )
+    with conn.cursor() as cur:
+        cur.executemany(
+            """
+            INSERT INTO mailapp.attachments
+                (message_id, content_type, filename, content_id, size_bytes, data)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+            rows,
+        )
 
 
 def _finalise_import(conn: psycopg.Connection[Any], import_id: int, message_count: int) -> None:
