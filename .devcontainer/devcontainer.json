@@ -1,7 +1,8 @@
 {
   "name": "mail-ingestor",
-  "image": "mcr.microsoft.com/devcontainers/python:3.12",
-  "features": {},
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/my_manager",
   "postCreateCommand": "sudo pip install -r requirements.txt",
   "customizations": {
     "vscode": {

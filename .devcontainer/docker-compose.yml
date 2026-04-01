@@ -1,0 +1,33 @@
+services:
+
+  # Conteneur de développement — image Python standard VS Code
+  app:
+    image: mcr.microsoft.com/devcontainers/python:3.12
+    volumes:
+      - ..:/workspaces/my_manager:cached   # monte le repo dans le conteneur
+    command: sleep infinity                 # maintient le conteneur vivant pour VS Code
+    environment:
+      DATABASE_URL: postgresql://mailapp:mailapp@db:5432/mailapp
+    depends_on:
+      db:
+        condition: service_healthy          # attend que PostgreSQL soit prêt avant de démarrer
+
+  # Base de données PostgreSQL
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: mailapp
+      POSTGRES_PASSWORD: mailapp
+      POSTGRES_DB: mailapp
+    volumes:
+      - pgdata:/var/lib/postgresql/data    # persistance des données entre les redémarrages
+    ports:
+      - "5432:5432"                        # expose le port pour les outils externes (DBeaver, psql hôte…)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mailapp"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
